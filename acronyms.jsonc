@@ -29,7 +29,7 @@
   "CD": "CoolDown (UW stat suffix)",
 
   // Cards
-  "CC": "Critical Chance / Critical Coin / Crowd Control",
+  "CC": ["Critical Chance", "Critical Coin", "Crowd Control"],
   "DM": "Demon Mode",
   "DR": "Death Ray",
   "EB": "Enemy Balance",
@@ -38,13 +38,13 @@
   "ES": "Energy Shield",
   "FU": "Free Upgrades",
   "IS": "Intro Sprint",
-  "PC": "Plasma Cannon (Card) / Primordial Collapse (Module)",
+  "PC": ["Plasma Cannon (Card)", "Primordial Collapse (Module)"],
   "RPC": "Recovery Package Chance",
   "SA": "Slow Aura",
   "ST": "Super Tower",
-  "SW": "Second Wind (Card) / Shock Wave (Workshop)",
+  "SW": ["Second Wind (Card)", "Shock Wave (Workshop)"],
   "WA": "Wave Accelerator",
-  "WS": "Wave Skip (Card) / Workshop",
+  "WS": ["Wave Skip (Card)", "Workshop"],
   "Zerk": "Berserker",
 
   // Labs

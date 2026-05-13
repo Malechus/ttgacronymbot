@@ -25,7 +25,7 @@ def test_store_does_not_contain_unknown_acronym(store):
 
 
 def test_get_returns_definition(store):
-    assert store.get("DPS") == "Damage Per Second"
+    assert store.get("DPS") == ["Damage Per Second"]
     assert store.get("dps") is None  # case-sensitive
 
 
@@ -35,7 +35,7 @@ def test_get_returns_none_for_unknown(store):
 
 def test_find_in_text_detects_acronyms(store):
     found = store.find_in_text("The DPS is great and HP is low")
-    assert found == {"DPS": "Damage Per Second", "HP": "Hit Points"}
+    assert found == {"DPS": ["Damage Per Second"], "HP": ["Hit Points"]}
 
 
 def test_find_in_text_is_case_sensitive(store):
@@ -61,9 +61,34 @@ def test_load_preserves_key_case(tmp_path):
     assert "GCOMP" not in store
     assert "eHP" in store
     assert store.find_in_text("Use GComp for coins and track eHP") == {
-        "GComp": "Galaxy Compressor",
-        "eHP": "Effective Health Points",
+        "GComp": ["Galaxy Compressor"],
+        "eHP": ["Effective Health Points"],
     }
+
+
+def test_load_normalizes_string_value_to_list(tmp_path):
+    data = {"DPS": "Damage Per Second"}
+    p = tmp_path / "acronyms.jsonc"
+    p.write_text(json.dumps(data), encoding="utf-8")
+    store = AcronymStore(str(p))
+    assert store.get("DPS") == ["Damage Per Second"]
+
+
+def test_load_preserves_list_value(tmp_path):
+    data = {"CC": ["Critical Chance", "Critical Coin", "Crowd Control"]}
+    p = tmp_path / "acronyms.jsonc"
+    p.write_text(json.dumps(data), encoding="utf-8")
+    store = AcronymStore(str(p))
+    assert store.get("CC") == ["Critical Chance", "Critical Coin", "Crowd Control"]
+
+
+def test_find_in_text_returns_all_definitions(tmp_path):
+    data = {"CC": ["Critical Chance", "Critical Coin", "Crowd Control"]}
+    p = tmp_path / "acronyms.jsonc"
+    p.write_text(json.dumps(data), encoding="utf-8")
+    store = AcronymStore(str(p))
+    found = store.find_in_text("use CC to slow enemies")
+    assert found == {"CC": ["Critical Chance", "Critical Coin", "Crowd Control"]}
 
 
 def test_load_strips_line_comments(tmp_path):

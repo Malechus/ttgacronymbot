@@ -135,10 +135,16 @@ class AcronymBot:
     # Helpers
     # ------------------------------------------------------------------
 
-    def _build_reply(self, found: dict[str, str]) -> str:
-        lines = "\n".join(f"- **{k}** — {v}" for k, v in sorted(found.items()))
+    def _build_reply(self, found: dict[str, list[str]]) -> str:
+        lines = []
+        for k, defs in sorted(found.items()):
+            if len(defs) == 1:
+                lines.append(f"- **{k}** — {defs[0]}")
+            else:
+                sub = "\n".join(f"  {i}. {d}" for i, d in enumerate(defs, 1))
+                lines.append(f"- **{k}**\n{sub}")
         plural = "s" if len(found) > 1 else ""
-        return _REPLY_TEMPLATE.format(plural=plural, definitions=lines).strip()
+        return _REPLY_TEMPLATE.format(plural=plural, definitions="\n".join(lines)).strip()
 
     def _reply(self, target, body: str) -> None:
         """Post a reply, or log it without posting in dry-run mode."""

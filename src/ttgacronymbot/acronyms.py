@@ -39,22 +39,28 @@ class AcronymStore:
     """Loads acronym definitions from a JSONC file and finds them in text."""
 
     def __init__(self, path: str) -> None:
-        self._acronyms: dict[str, str] = {}
+        self._acronyms: dict[str, list[str]] = {}
         self.load(path)
 
     def load(self, path: str) -> None:
-        """(Re)load acronyms from the given JSONC file path."""
-        raw = Path(path).read_text(encoding="utf-8")
-        data: dict[str, str] = json.loads(_strip_jsonc_comments(raw))
-        self._acronyms = dict(data)
+        """(Re)load acronyms from the given JSONC file path.
 
-    def find_in_text(self, text: str) -> dict[str, str]:
+        Values may be a single string or a list of strings; both are normalized
+        to ``list[str]`` internally.
+        """
+        raw = Path(path).read_text(encoding="utf-8")
+        data: dict[str, str | list[str]] = json.loads(_strip_jsonc_comments(raw))
+        self._acronyms = {
+            k: ([v] if isinstance(v, str) else v) for k, v in data.items()
+        }
+
+    def find_in_text(self, text: str) -> dict[str, list[str]]:
         """Return a mapping of every known acronym found as a whole word in text (case-sensitive)."""
         candidates = set(re.findall(r"[A-Za-z]\w*%?", text))
         return {word: self._acronyms[word] for word in candidates if word in self._acronyms}
 
-    def get(self, acronym: str) -> str | None:
-        """Return the definition for a single acronym, or None if unknown."""
+    def get(self, acronym: str) -> list[str] | None:
+        """Return the definitions for a single acronym, or None if unknown."""
         return self._acronyms.get(acronym)
 
     def __len__(self) -> int:

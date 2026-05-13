@@ -223,6 +223,23 @@ def test_bot_command_reply_lists_all_found_acronyms(config, store):
     assert "HP" in reply_text
 
 
+def test_bot_reply_formats_multiple_definitions(tmp_path, config):
+    data = {"CC": ["Critical Chance", "Critical Coin", "Crowd Control"]}
+    p = tmp_path / "acronyms.jsonc"
+    p.write_text(json.dumps(data), encoding="utf-8")
+    multi_store = AcronymStore(str(p))
+    bot = _make_bot(config, multi_store)
+    submission = _make_submission(title="CC strats discussion")
+
+    bot._process_submission(submission)
+
+    reply_text = submission.reply.call_args[0][0]
+    assert "CC" in reply_text
+    assert "1. Critical Chance" in reply_text
+    assert "2. Critical Coin" in reply_text
+    assert "3. Crowd Control" in reply_text
+
+
 # ---------------------------------------------------------------------------
 # Dry-run mode tests
 # ---------------------------------------------------------------------------

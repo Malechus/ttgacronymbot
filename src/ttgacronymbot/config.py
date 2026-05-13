@@ -13,7 +13,7 @@ class Config:
     password: str
     user_agent: str
     subreddit: str = "TheTowerGame"
-    acronyms_file: str = "acronyms.json"
+    acronyms_file: str = "acronyms.jsonc"
     dry_run: bool = False
 
     @classmethod
@@ -25,7 +25,7 @@ class Config:
             password=_require("REDDIT_PASSWORD"),
             user_agent=os.environ.get("REDDIT_USER_AGENT", "ttgacronymbot/0.1.0"),
             subreddit=os.environ.get("SUBREDDIT", "TheTowerGame"),
-            acronyms_file=os.environ.get("ACRONYMS_FILE", "acronyms.json"),
+            acronyms_file=os.environ.get("ACRONYMS_FILE", "acronyms.jsonc"),
             dry_run=os.environ.get("DRY_RUN", "").lower() in ("1", "true", "yes"),
         )
 

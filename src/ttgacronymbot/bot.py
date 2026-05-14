@@ -12,20 +12,33 @@ logger = logging.getLogger(__name__)
 
 _COMMAND_PATTERN = re.compile(r"!acronymbot\b", re.IGNORECASE)
 
+_FOOTER = "^(I am a bot \\| [Source / Feedback](https://github.com/Malechus/ttgacronymbot))"
+
 _REPLY_TEMPLATE = """\
 **Acronym{plural} detected:**
 
 {definitions}
 
 ---
-^(I am a bot \\| [Source / Feedback](https://www.reddit.com/r/TheTowerGame/))
+""" + _FOOTER + """
 """
 
 _NO_ACRONYMS_REPLY = """\
 I couldn't find any known acronyms in that comment.
 
 ---
-^(I am a bot \\| [Source / Feedback](https://www.reddit.com/r/TheTowerGame/))
+""" + _FOOTER + """
+"""
+
+_LOOSE_MATCH_REPLY_TEMPLATE = """\
+I didn't find any acronyms with exact case matching, so I tried again using case-insensitive matching. Here's what I found:
+
+**Acronym{plural} detected (loose match):**
+
+{definitions}
+
+---
+""" + _FOOTER + """
 """
 
 
@@ -124,8 +137,17 @@ class AcronymBot:
         self._replied_comment_ids.add(comment.id)
 
         if not found:
-            self._reply(comment, _NO_ACRONYMS_REPLY.strip())
-            logger.info("Replied to command in %s — no acronyms found", comment.id)
+            found = self._store.find_in_text(parent_text.upper())
+            if found:
+                self._reply(comment, self._build_reply(found, loose=True))
+                logger.info(
+                    "Replied to command in %s — loose-matched: %s",
+                    comment.id,
+                    sorted(found.keys()),
+                )
+            else:
+                self._reply(comment, _NO_ACRONYMS_REPLY.strip())
+                logger.info("Replied to command in %s — no acronyms found", comment.id)
             return
 
         self._reply(comment, self._build_reply(found))
@@ -135,7 +157,7 @@ class AcronymBot:
     # Helpers
     # ------------------------------------------------------------------
 
-    def _build_reply(self, found: dict[str, list[str]]) -> str:
+    def _build_reply(self, found: dict[str, list[str]], *, loose: bool = False) -> str:
         lines = []
         for k, defs in sorted(found.items()):
             if len(defs) == 1:
@@ -144,7 +166,8 @@ class AcronymBot:
                 sub = "\n".join(f"  {i}. {d}" for i, d in enumerate(defs, 1))
                 lines.append(f"- **{k}**\n{sub}")
         plural = "s" if len(found) > 1 else ""
-        return _REPLY_TEMPLATE.format(plural=plural, definitions="\n".join(lines)).strip()
+        template = _LOOSE_MATCH_REPLY_TEMPLATE if loose else _REPLY_TEMPLATE
+        return template.format(plural=plural, definitions="\n".join(lines)).strip()
 
     def _reply(self, target, body: str) -> None:
         """Post a reply, or log it without posting in dry-run mode."""

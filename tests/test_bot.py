@@ -164,6 +164,47 @@ def test_bot_replies_no_acronyms_found_when_parent_has_none(config, store):
     assert "couldn't find" in comment.reply.call_args[0][0].lower()
 
 
+def test_bot_replies_with_loose_match_when_acronyms_are_lowercase(config, store):
+    bot = _make_bot(config, store)
+    parent = _make_parent_comment("the dps is amazing")
+    comment = _make_comment(body="!acronymbot")
+    comment.parent.return_value = parent
+
+    bot._process_comment(comment)
+
+    comment.reply.assert_called_once()
+    reply_text = comment.reply.call_args[0][0]
+    assert "DPS" in reply_text
+    assert "Damage Per Second" in reply_text
+    assert "loose match" in reply_text.lower()
+
+
+def test_bot_loose_match_includes_case_insensitive_warning(config, store):
+    bot = _make_bot(config, store)
+    parent = _make_parent_comment("my hp is really low")
+    comment = _make_comment(body="!acronymbot")
+    comment.parent.return_value = parent
+
+    bot._process_comment(comment)
+
+    reply_text = comment.reply.call_args[0][0]
+    assert "case-insensitive" in reply_text.lower()
+
+
+def test_bot_no_acronyms_reply_when_loose_match_also_fails(config, store):
+    bot = _make_bot(config, store)
+    parent = _make_parent_comment("nothing relevant at all")
+    comment = _make_comment(body="!acronymbot")
+    comment.parent.return_value = parent
+
+    bot._process_comment(comment)
+
+    comment.reply.assert_called_once()
+    reply_text = comment.reply.call_args[0][0]
+    assert "couldn't find" in reply_text.lower()
+    assert "loose match" not in reply_text.lower()
+
+
 def test_bot_does_not_reply_to_own_command_comments(config, store):
     bot = _make_bot(config, store)
     comment = _make_comment(body="!acronymbot", author_name="testbot")
